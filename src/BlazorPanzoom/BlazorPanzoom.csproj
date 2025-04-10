@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <ResolveStaticWebAssetsInputsDependsOn>
-            $(ResolveStaticWebAssetsInputsDependsOn);
-        </ResolveStaticWebAssetsInputsDependsOn>
         <PackageVersion>0.2.1</PackageVersion>
         <Description>Blazor wrapper for timmywil's panzoom library that helps you enable zooming and panning of Blazor components and elements easier.</Description>
         <Copyright>Copyright 2021 Ronnie Tran</Copyright>
@@ -20,7 +17,7 @@
     </PropertyGroup>
     
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
