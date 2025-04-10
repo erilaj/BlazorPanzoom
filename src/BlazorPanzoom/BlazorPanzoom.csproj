@@ -25,12 +25,8 @@
         <SupportedPlatform Include="browser" />
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.15"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="wwwroot" />
-    </ItemGroup>
+   <ItemGroup>
+     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.15" />
+ </ItemGroup>
 
 </Project>
