@@ -1,4 +1,4 @@
-﻿class BlazorPanzoomInterop {
+class BlazorPanzoomInterop {
 
     constructor() {
     }
@@ -52,13 +52,40 @@
     }
 
     registerZoomWithWheel(panzoom, element) {
-        const parent = element ? element.parentElement : panzoom.boundElement.parentElement
-        parent.addEventListener('wheel', panzoom.zoomWithWheel)
+        // Ensure panzoom and its boundElement exist if element is not provided
+        const targetElement = element || (panzoom ? panzoom.boundElement : null);
+        if (!targetElement) {
+            console.warn("registerZoomWithWheel: Target element not found.");
+            return;
+        }
+
+        const parent = targetElement.parentElement;
+        if (parent) { // Only add listener if parent exists
+            parent.addEventListener('wheel', panzoom.zoomWithWheel);
+        } else {
+            console.warn("registerZoomWithWheel: Target element has no parentElement.");
+        }
     }
 
     registerWheelListener(dotnetReference, panzoom, element) {
-        const parent = element ? element.parentElement : panzoom.boundElement.parentElement
-        parent.addEventListener('wheel', panzoom.boundWheelListener = this.wheelHandler.bind(this, dotnetReference))
+        // Ensure panzoom and its boundElement exist if element is not provided
+        const targetElement = element || (panzoom ? panzoom.boundElement : null);
+        if (!targetElement) {
+            console.warn("registerWheelListener: Target element not found.");
+            return;
+        }
+
+        const parent = targetElement.parentElement;
+        if (parent) { // Only add listener if parent exists
+            // Ensure boundWheelListener doesn't already exist or clean up previous if necessary
+            if (panzoom.boundWheelListener) {
+                parent.removeEventListener('wheel', panzoom.boundWheelListener);
+            }
+            panzoom.boundWheelListener = this.wheelHandler.bind(this, dotnetReference);
+            parent.addEventListener('wheel', panzoom.boundWheelListener);
+        } else {
+            console.warn("registerWheelListener: Target element has no parentElement.");
+        }
     }
 
 
@@ -75,21 +102,72 @@
     }
 
     removeZoomWithWheel(panzoom, element) {
-        const parent = element ? element.parentElement : panzoom.boundElement.parentElement
-        parent.removeEventListener('wheel', panzoom.zoomWithWheel);
+        // Determine the target element whose parent we need
+        const targetElement = element || (panzoom ? panzoom.boundElement : null);
+
+        // Check if we have a valid target element AND the panzoom instance itself
+        if (!targetElement || !panzoom) {
+            // console.warn("removeZoomWithWheel: Could not find target element or panzoom instance. Skipping removeEventListener.");
+            return; // Silently exit if elements are gone during cleanup
+        }
+
+        // Check if the target element has a parentElement
+        const parent = targetElement.parentElement;
+        if (!parent) {
+            // console.warn("removeZoomWithWheel: Target element does not have a parentElement. Skipping removeEventListener.");
+            return; // Silently exit
+        }
+
+        // If we have a valid parent, remove the listener
+        // Check if zoomWithWheel function actually exists on the panzoom object
+        if (typeof panzoom.zoomWithWheel === 'function') {
+            parent.removeEventListener('wheel', panzoom.zoomWithWheel);
+        }
     }
 
     removeWheelListener(panzoom, element) {
-        const parent = element ? element.parentElement : panzoom.boundElement.parentElement
-        if (panzoom.boundWheelListener) {
+        // Determine the target element whose parent we need
+        const targetElement = element || (panzoom ? panzoom.boundElement : null);
+
+        // Check if we have a valid target element AND the panzoom instance itself
+        if (!targetElement || !panzoom) {
+            // console.warn("removeWheelListener: Could not find target element or panzoom instance. Skipping removeEventListener.");
+            return; // Silently exit
+        }
+
+        // Check if the target element has a parentElement
+        const parent = targetElement.parentElement;
+        if (!parent) {
+            // console.warn("removeWheelListener: Target element does not have a parentElement. Skipping removeEventListener.");
+            return; // Silently exit
+        }
+
+        // Check if the specific bound listener exists before trying to remove it
+        if (panzoom && typeof panzoom.boundWheelListener === 'function') {
             parent.removeEventListener('wheel', panzoom.boundWheelListener);
-            delete panzoom.boundWheelListener
+            // It's good practice to delete the reference after removing the listener
+            delete panzoom.boundWheelListener;
+        } else {
+            // console.warn("removeWheelListener: panzoom.boundWheelListener not found or not a function. Skipping removeEventListener.");
         }
     }
 
     destroyPanzoom(panzoom) {
+        // This is likely called by the main panzoom destroy or your C# code
+        // It's okay to delete boundElement here, as the remove listener functions above should now handle it being missing.
         if (panzoom) {
-            delete panzoom.boundElement
+            // You might also want to explicitly call the remove listener functions here IF they weren't called from C#
+            // this.removeZoomWithWheel(panzoom, null); // Example, might cause double removal if also called from C#
+            // this.removeWheelListener(panzoom, null); // Example
+
+            // Clean up the panzoom instance itself (assuming the library provides a destroy method)
+            if (typeof panzoom.destroy === 'function') {
+                panzoom.destroy();
+            }
+
+            // Then delete custom properties
+            delete panzoom.boundElement;
+            delete panzoom.boundWheelListener; // Ensure this is cleaned up too
         }
     }
 }
